@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const status = require("../src/status");
-
 const activate = require("../src/activate");
+const { status } = require("../src/status");
+const compile = require("../src/compile");
 
 const command = process.argv[2];
 
@@ -12,7 +12,7 @@ switch (command) {
     break;
 
   case "compile":
-    console.log("Running compile...");
+    compile();
     break;
 
   case "status":
