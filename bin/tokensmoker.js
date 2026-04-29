@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const status = require("../src/status");
+
 const activate = require("../src/activate");
 
 const command = process.argv[2];
@@ -14,7 +16,7 @@ switch (command) {
     break;
 
   case "status":
-    console.log("Checking status...");
+    status();
     break;
 
   default:
