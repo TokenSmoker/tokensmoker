@@ -3,5 +3,8 @@
   "version": "0.1.0",
   "bin": {
     "tokensmoker": "./bin/tokensmoker.js"
+  },
+  "dependencies": {
+    "prompt-sync": "^4.2.0"
   }
 }

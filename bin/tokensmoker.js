@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+const activate = require("../src/activate");
+
 const command = process.argv[2];
 
 switch (command) {
   case "activate":
-    console.log("Running activation...");
+    activate();
     break;
 
   case "compile":
