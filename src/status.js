@@ -53,6 +53,20 @@ function status() {
   console.log(`Status: ${data.status}`);
   console.log(`Days since activation: ${trial.daysUsed}`);
 
+  if (data.status === "commercial") {
+    console.log(`License status: ${data.licenseStatus || "unknown"}`);
+
+    if (data.licenseLast4) {
+      console.log(`License: ****${data.licenseLast4}`);
+    }
+
+    if (data.upgradedAt) {
+      console.log(`Upgraded: ${data.upgradedAt}`);
+    }
+
+    return;
+  }
+
   if (data.status === "trial") {
     console.log(`Trial days remaining: ${trial.daysRemaining}`);
   }
