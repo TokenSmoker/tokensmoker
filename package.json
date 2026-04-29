@@ -1,0 +1,7 @@
+{
+  "name": "tokensmoker",
+  "version": "0.1.0",
+  "bin": {
+    "tokensmoker": "./bin/tokensmoker.js"
+  }
+}
