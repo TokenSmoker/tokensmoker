@@ -1,8 +1,11 @@
 {
   "name": "tokensmoker",
   "version": "0.1.0",
+  "description": "TokenSmoker commercial CLI",
   "bin": {
-    "tokensmoker": "./bin/tokensmoker.js"
+    "tokensmoker": "./bin/tokensmoker.js",
+    "tsm": "./bin/tokensmoker.js",
+    "smoke": "./bin/tokensmoker.js"
   },
   "dependencies": {
     "prompt-sync": "^4.2.0"
