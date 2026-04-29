@@ -4,6 +4,12 @@ async function compile(userPrompt) {
     process.exit(1);
   }
 
+  const apiKey = process.env.TOKENSMOKER_API_KEY;
+  if (!apiKey) {
+    console.error("TokenSmoker API key missing. Set TOKENSMOKER_API_KEY.");
+    process.exit(1);
+  }
+
   const baseUrl =
     process.env.TOKENSMOKER_API_URL || "https://tokensmoker-api.onrender.com";
 
@@ -11,7 +17,10 @@ async function compile(userPrompt) {
   try {
     res = await fetch(`${baseUrl}/compile`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
       body: JSON.stringify({ prompt: userPrompt })
     });
   } catch (err) {
