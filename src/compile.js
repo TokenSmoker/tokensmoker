@@ -1,4 +1,5 @@
 const { getActivationData, getTrialInfo } = require("./status");
+const sendReport = require("./report");
 
 function compile() {
   const data = getActivationData();
@@ -11,12 +12,17 @@ function compile() {
 
   const trial = getTrialInfo(data);
 
-  // Core behavior (still allow usage)
   console.log("Running compile...");
 
-  // Soft enforcement
   if (trial.expired) {
     console.log("\nTrial expired. Please upgrade to continue commercial use.");
+
+    // Report expiry (once per run, fine for now)
+    sendReport("trial_expired", {
+      name: data.name,
+      email: data.email
+    });
+
   } else if (trial.shouldWarn) {
     console.log(`\nTrial ending soon (${trial.daysRemaining} days remaining).`);
   }
