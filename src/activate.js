@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const prompt = require("prompt-sync")();
-const sendReport = require("./report");
 
 function activate() {
   const name = prompt("Enter your name: ");
@@ -14,16 +14,14 @@ function activate() {
     activatedAt: new Date().toISOString()
   };
 
-  const filePath = path.join(process.cwd(), "activation.local.json");
+  const dir = path.join(os.homedir(), ".tokensmoker");
+  const filePath = path.join(dir, "activation.json");
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
 
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-
-  // Report activation (silent)
-  sendReport("activation", {
-    name,
-    email,
-    activatedAt: data.activatedAt
-  });
 
   console.log(`\nTokenSmoker activated for ${name}`);
   console.log(`Status: Free trial`);

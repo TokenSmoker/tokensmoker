@@ -1,11 +1,12 @@
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 
 const TRIAL_DAYS = 14;
 const QUIET_DAYS = 10;
 
 function getActivationData() {
-  const filePath = path.join(process.cwd(), "activation.local.json");
+  const filePath = path.join(os.homedir(), ".tokensmoker", "activation.json");
 
   if (!fs.existsSync(filePath)) {
     return null;
