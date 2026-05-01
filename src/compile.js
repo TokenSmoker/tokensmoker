@@ -29,7 +29,18 @@ async function compile(userPrompt) {
   }
 
   if (!res.ok) {
-    console.error(`Request failed: ${res.status} ${res.statusText}`);
+    let message = `Request failed: ${res.status} ${res.statusText}`;
+
+    try {
+      const data = await res.json();
+      if (data?.error) {
+        message = data.error === "Trial expired"
+          ? "Free trial expired"
+          : data.error;
+      }
+    } catch (_) {}
+
+    console.error(message);
     process.exit(1);
   }
 
