@@ -57,7 +57,28 @@ async function compile(userPrompt) {
     process.exit(1);
   }
 
+  const inputTokens = Math.ceil(userPrompt.length / 4);
+  const outputTokens = Math.ceil(data.compiledPrompt.length / 4);
+  const diff = inputTokens - outputTokens;
+  const pct = inputTokens > 0
+    ? Math.round((Math.abs(diff) / inputTokens) * 100)
+    : 0;
+
+  console.log("===== TOKENSMOKER COMPILED PROMPT =====");
+  console.log("");
   console.log(data.compiledPrompt);
+  console.log("");
+  console.log("===== ESTIMATE =====");
+  console.log(`Input:  ${inputTokens} tokens`);
+  console.log(`Output: ${outputTokens} tokens`);
+  if (diff >= 0) {
+    console.log(`Saved:  ${diff} tokens (${pct}%)`);
+  } else {
+    console.log(`Added:  ${-diff} tokens (${pct}%)`);
+  }
+  console.log("");
+  console.log("Estimates only (chars/4 heuristic).");
+  console.log("Copy the compiled prompt above into your AI coding tool.");
 }
 
 module.exports = compile;
