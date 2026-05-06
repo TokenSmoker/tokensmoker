@@ -78,8 +78,10 @@ async function compile(userPrompt) {
   console.log("===== ESTIMATE =====");
   console.log(`Input:  ${inputTokens} tokens`);
   console.log(`Output: ${outputTokens} tokens`);
-  console.log(diffLine);
-  console.log("");
+  if (diff >= 1) {
+    console.log(diffLine);
+    console.log("");
+  }
   console.log("Additional savings likely due to fewer rework iterations.");
   console.log("");
   console.log("Copy the compiled prompt above into your AI coding tool.");
