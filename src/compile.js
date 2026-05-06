@@ -80,7 +80,8 @@ async function compile(userPrompt) {
   console.log(`Output: ${outputTokens} tokens`);
   console.log(diffLine);
   console.log("");
-  console.log("(Estimated using chars/4)");
+  console.log("Additional savings likely due to fewer rework iterations.");
+  console.log("");
   console.log("Copy the compiled prompt above into your AI coding tool.");
 }
 
