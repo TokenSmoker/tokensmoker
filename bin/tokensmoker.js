@@ -5,40 +5,43 @@ const { status } = require("../src/status");
 const compile = require("../src/compile");
 const upgrade = require("../src/upgrade");
 const { HARNESSES, parseHarnessAndPrompt } = require("../src/parseHarness");
+const { parseInputFlags, readPromptFromSource } = require("../src/parseInput");
 
-function dispatchCompile(args) {
-  const { harness, prompt, error } = parseHarnessAndPrompt(args);
-  if (error) {
-    process.stderr.write(error + "\n");
+async function dispatchCompile(args) {
+  const flags = parseInputFlags(args);
+  if (flags.error) {
+    process.stderr.write(flags.error + "\n");
     process.exit(1);
   }
-  compile(prompt, { harness });
+
+  const { harness, prompt: positionalPrompt, error: harnessError } =
+    parseHarnessAndPrompt(flags.positional);
+  if (harnessError) {
+    process.stderr.write(harnessError + "\n");
+    process.exit(1);
+  }
+
+  const source = await readPromptFromSource({
+    mode: flags.mode,
+    filePath: flags.filePath,
+    positionalPrompt,
+    stdin: process.stdin,
+    stderr: process.stderr,
+    isPipedStdin: !process.stdin.isTTY,
+  });
+
+  if (source.error) {
+    process.stderr.write(source.error + "\n");
+    process.exit(1);
+  }
+
+  await compile(source.prompt, { harness });
 }
 
 const args = process.argv.slice(2);
 const command = args[0];
 
-switch (command) {
-  case "activate":
-    activate();
-    break;
-
-  case "compile":
-    dispatchCompile(args.slice(1));
-    break;
-
-  case "status":
-    status();
-    break;
-
-  case "upgrade":
-    upgrade();
-    break;
-
-  case undefined:
-  case "--help":
-  case "-h":
-    console.log(`
+const helpText = `
 TokenSmoker CLI
 
 Usage:
@@ -58,12 +61,33 @@ Harness selector (optional, defaults to auto):
 
 Available harnesses: ${HARNESSES.join(", ")}
 
+Large or shell-unfriendly prompts:
+  smoke design --file prompt.txt
+  smoke design -f prompt.txt
+  smoke design --paste
+  cat prompt.txt | smoke design
+
 Explicit:
   tokensmoker compile "fix this function"
   tokensmoker compile design "<prompt>"
-`);
-    break;
+`;
 
-  default:
-    dispatchCompile(args);
+if (command === "activate") {
+  activate();
+} else if (command === "compile") {
+  dispatchCompile(args.slice(1));
+} else if (command === "status") {
+  status();
+} else if (command === "upgrade") {
+  upgrade();
+} else if (command === "--help" || command === "-h") {
+  console.log(helpText);
+} else if (command === undefined) {
+  if (!process.stdin.isTTY) {
+    dispatchCompile([]);
+  } else {
+    console.log(helpText);
+  }
+} else {
+  dispatchCompile(args);
 }
