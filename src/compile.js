@@ -1,3 +1,5 @@
+const { resolveApiKey } = require("./credentials");
+
 async function compile(userPrompt, opts = {}) {
   if (!userPrompt || !userPrompt.trim()) {
     console.error('Usage: tokensmoker compile "<prompt>"');
@@ -6,9 +8,9 @@ async function compile(userPrompt, opts = {}) {
 
   const harness = opts.harness || "auto";
 
-  const apiKey = process.env.TOKENSMOKER_API_KEY;
+  const { apiKey, error } = resolveApiKey();
   if (!apiKey) {
-    console.error("TokenSmoker API key missing. Set TOKENSMOKER_API_KEY.");
+    console.error(error);
     process.exit(1);
   }
 
