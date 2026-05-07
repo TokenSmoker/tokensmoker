@@ -1,8 +1,10 @@
-async function compile(userPrompt) {
+async function compile(userPrompt, opts = {}) {
   if (!userPrompt || !userPrompt.trim()) {
     console.error('Usage: tokensmoker compile "<prompt>"');
     process.exit(1);
   }
+
+  const harness = opts.harness || "auto";
 
   const apiKey = process.env.TOKENSMOKER_API_KEY;
   if (!apiKey) {
@@ -21,7 +23,7 @@ async function compile(userPrompt) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`
       },
-      body: JSON.stringify({ prompt: userPrompt })
+      body: JSON.stringify({ prompt: userPrompt, harness })
     });
   } catch (err) {
     console.error(`Request failed: ${err.message}`);
@@ -71,7 +73,9 @@ async function compile(userPrompt) {
     ? `${label}:  ${absDiff} tokens (${pct}%)`
     : `${label}:  ${absDiff} tokens`;
 
-  console.log("===== TOKENSMOKER COMPILED PROMPT =====");
+  const usedHarness = typeof data.harness === "string" ? data.harness : harness;
+  const headerSuffix = usedHarness ? ` (harness: ${usedHarness})` : "";
+  console.log(`===== TOKENSMOKER COMPILED PROMPT${headerSuffix} =====`);
   console.log("");
   console.log(data.compiledPrompt);
   console.log("");

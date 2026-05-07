@@ -4,6 +4,16 @@ const activate = require("../src/activate");
 const { status } = require("../src/status");
 const compile = require("../src/compile");
 const upgrade = require("../src/upgrade");
+const { HARNESSES, parseHarnessAndPrompt } = require("../src/parseHarness");
+
+function dispatchCompile(args) {
+  const { harness, prompt, error } = parseHarnessAndPrompt(args);
+  if (error) {
+    process.stderr.write(error + "\n");
+    process.exit(1);
+  }
+  compile(prompt, { harness });
+}
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -14,7 +24,7 @@ switch (command) {
     break;
 
   case "compile":
-    compile(args.slice(1).join(" "));
+    dispatchCompile(args.slice(1));
     break;
 
   case "status":
@@ -41,11 +51,19 @@ Compile prompts:
   tsm "build a login route"
   smoke "clean up this React component"
 
+Harness selector (optional, defaults to auto):
+  smoke design "build a marketing page with Hero, CTA, Footer"
+  smoke code   "fix this function"
+  smoke auto   "<prompt>"
+
+Available harnesses: ${HARNESSES.join(", ")}
+
 Explicit:
   tokensmoker compile "fix this function"
+  tokensmoker compile design "<prompt>"
 `);
     break;
 
   default:
-    compile(args.join(" "));
+    dispatchCompile(args);
 }
