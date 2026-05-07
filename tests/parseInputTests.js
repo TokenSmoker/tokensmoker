@@ -9,6 +9,7 @@ const { Readable } = require("stream");
 const {
   parseInputFlags,
   readPromptFromSource,
+  readStreamToEnd,
   PASTE_MESSAGE,
 } = require(path.join(__dirname, "..", "src", "parseInput"));
 const { parseHarnessAndPrompt } = require(
@@ -59,6 +60,55 @@ function tmpFile(name, contents) {
 
 function fakeStdin(text) {
   return Readable.from([text]);
+}
+
+// Mimics a paused stdin (e.g. TTY) that only delivers data after .resume().
+// If consumers don't call resume(), this stream never ends — exposing the
+// hang bug.
+function pausedFakeStdin(chunks) {
+  let resumed = false;
+  let dataListener = null;
+  let endListener = null;
+  const stream = {
+    _resumed: false,
+    setEncoding() {},
+    on(event, fn) {
+      if (event === "data") dataListener = fn;
+      if (event === "end") endListener = fn;
+      return stream;
+    },
+    once(event, fn) {
+      return stream.on(event, fn);
+    },
+    removeListener() {
+      return stream;
+    },
+    resume() {
+      if (resumed) return;
+      resumed = true;
+      stream._resumed = true;
+      // Defer so listeners attached after resume() also work.
+      setImmediate(() => {
+        for (const c of chunks) {
+          if (dataListener) dataListener(c);
+        }
+        if (endListener) endListener();
+      });
+    },
+  };
+  return stream;
+}
+
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`timed out after ${ms}ms: ${label}`)),
+        ms
+      )
+    ),
+  ]);
 }
 
 function fakeStderr() {
@@ -202,6 +252,53 @@ const SPLIT_URL_PROMPT = [
       isPipedStdin: false,
     });
     assertContains(result.error, "empty");
+  });
+
+  await t("readStreamToEnd explicitly resumes a paused stream", async () => {
+    const stream = pausedFakeStdin(["hello\n", "world\n"]);
+    const data = await withTimeout(
+      readStreamToEnd(stream),
+      500,
+      "paused stdin without resume()"
+    );
+    assert(stream._resumed, "stream.resume() was not called");
+    assertEqual(data, "hello\nworld\n");
+  });
+
+  await t("--paste resolves immediately on stream end (no hang)", async () => {
+    const multiline = "first\nsecond\nthird (no trailing newline)";
+    const stream = pausedFakeStdin([multiline]);
+    const result = await withTimeout(
+      readPromptFromSource({
+        mode: "paste",
+        filePath: null,
+        positionalPrompt: "",
+        stdin: stream,
+        stderr: fakeStderr(),
+        isPipedStdin: false,
+      }),
+      500,
+      "paste mode hung after end"
+    );
+    assert(!result.error, "should not error: " + result.error);
+    assertEqual(result.prompt, multiline);
+  });
+
+  await t("--paste with empty stdin returns missing-prompt error", async () => {
+    const stream = pausedFakeStdin([]);
+    const result = await withTimeout(
+      readPromptFromSource({
+        mode: "paste",
+        filePath: null,
+        positionalPrompt: "",
+        stdin: stream,
+        stderr: fakeStderr(),
+        isPipedStdin: false,
+      }),
+      500,
+      "empty paste hung"
+    );
+    assertContains(result.error, "No prompt");
   });
 
   await t("--paste reads stdin and prints the paste prompt to stderr", async () => {

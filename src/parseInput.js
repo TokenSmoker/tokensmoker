@@ -74,14 +74,42 @@ function parseInputFlags(args) {
 function readStreamToEnd(stream) {
   return new Promise((resolve, reject) => {
     let data = "";
+    let settled = false;
+
     if (typeof stream.setEncoding === "function") {
       stream.setEncoding("utf8");
     }
-    stream.on("data", (chunk) => {
+
+    const onData = (chunk) => {
       data += typeof chunk === "string" ? chunk : chunk.toString("utf8");
-    });
-    stream.on("end", () => resolve(data));
-    stream.on("error", reject);
+    };
+    const cleanup = () => {
+      stream.removeListener("data", onData);
+      stream.removeListener("end", onEnd);
+      stream.removeListener("error", onError);
+    };
+    const onEnd = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(data);
+    };
+    const onError = (err) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err);
+    };
+
+    stream.on("data", onData);
+    stream.once("end", onEnd);
+    stream.once("error", onError);
+
+    // TTY stdin stays paused unless we resume it explicitly. Without this,
+    // Ctrl+D never produces an `end` event and the CLI hangs.
+    if (typeof stream.resume === "function") {
+      stream.resume();
+    }
   });
 }
 
