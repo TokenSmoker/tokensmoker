@@ -142,7 +142,8 @@ cat prompt.txt | smoke design
 
 ## Example
 
-A real PUP-shape design brief (excerpt):
+A real Purchased User Prompt (PUP) — a long, narrative-heavy design brief
+of the kind users buy or commission and paste in whole — shown as an excerpt:
 
 ```text
 # Project Brief — DeFi Landing Page
