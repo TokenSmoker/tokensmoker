@@ -1,4 +1,5 @@
 const { resolveApiKey } = require("./credentials");
+const { renderCompileSummary } = require("./render");
 
 async function compile(userPrompt, opts = {}) {
   if (!userPrompt || !userPrompt.trim()) {
@@ -64,17 +65,6 @@ async function compile(userPrompt, opts = {}) {
 
   const inputTokens = Math.ceil(userPrompt.length / 4);
   const outputTokens = Math.ceil(data.compiledPrompt.length / 4);
-  const diff = inputTokens - outputTokens;
-  const absDiff = Math.abs(diff);
-  const pct = inputTokens > 0
-    ? Math.round((absDiff / inputTokens) * 100)
-    : 0;
-  const showPct = inputTokens >= 10;
-
-  const label = diff >= 0 ? "Saved" : "Added";
-  const diffLine = showPct
-    ? `${label}:  ${absDiff} tokens (${pct}%)`
-    : `${label}:  ${absDiff} tokens`;
 
   const usedHarness = typeof data.harness === "string" ? data.harness : harness;
   const headerSuffix = usedHarness ? ` (harness: ${usedHarness})` : "";
@@ -128,14 +118,15 @@ async function compile(userPrompt, opts = {}) {
     console.log("");
   }
 
-  console.log("===== ESTIMATE =====");
-  console.log(`Input:  ${inputTokens} tokens`);
-  console.log(`Output: ${outputTokens} tokens`);
-  if (diff >= 1) {
-    console.log(diffLine);
-    console.log("");
-  }
-  console.log("Additional savings likely due to fewer rework iterations.");
+  // Compile summary — primary value framing is "what improved" + "likely
+  // outcome", with token delta as a secondary "Prompt delta" line. Token
+  // increases never render as "Added: -X"; they show as preservation-first
+  // compiles. See src/render.js for the rendering rules.
+  console.log(renderCompileSummary({
+    inputTokens,
+    outputTokens,
+    harness: usedHarness,
+  }));
   console.log("");
   console.log("Copy the compiled prompt above into your AI coding tool.");
 }
