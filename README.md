@@ -74,7 +74,7 @@ accepts lower reduction percentages to keep nuance.
 |---|---|---|
 | TS-Code | yes | live |
 | TS-Design | yes | live |
-| TS-Docs | no — user-selected | live |
+| TS-Docs | user-selected for now | live |
 | TS-CAD | — | planned |
 | TS-Agent | — | planned |
 
