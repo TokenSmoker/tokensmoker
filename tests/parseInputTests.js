@@ -411,6 +411,19 @@ const SPLIT_URL_PROMPT = [
     assertEqual(ph.prompt, "");
   });
 
+  await t("--debug parses to debug:true and is stripped from positional", () => {
+    const flags = parseInputFlags(["design", "--debug", "--paste"]);
+    assertEqual(flags.mode, "paste");
+    assertEqual(flags.debug, true);
+    const ph = parseHarnessAndPrompt(flags.positional);
+    assertEqual(ph.harness, "design");
+  });
+
+  await t("absence of --debug → debug:false", () => {
+    const flags = parseInputFlags(["design", "--paste"]);
+    assertEqual(flags.debug, false);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) {
     console.log("\nFailures:");

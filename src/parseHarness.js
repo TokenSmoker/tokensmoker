@@ -1,6 +1,6 @@
 "use strict";
 
-const HARNESSES = ["auto", "code", "design"];
+const HARNESSES = ["auto", "code", "design", "docs"];
 
 function isHarnessSelector(s) {
   return typeof s === "string" && HARNESSES.includes(s);

@@ -6,11 +6,12 @@ const PASTE_MESSAGE = "Paste your prompt below. Press Ctrl+D when finished.";
 
 function parseInputFlags(args) {
   if (!Array.isArray(args)) {
-    return { mode: null, filePath: null, positional: [] };
+    return { mode: null, filePath: null, positional: [], debug: false };
   }
 
   let mode = null;
   let filePath = null;
+  let debug = false;
   const positional = [];
 
   function setFile(path, flagName) {
@@ -65,10 +66,15 @@ function parseInputFlags(args) {
       continue;
     }
 
+    if (a === "--debug") {
+      debug = true;
+      continue;
+    }
+
     positional.push(a);
   }
 
-  return { mode, filePath, positional };
+  return { mode, filePath, positional, debug };
 }
 
 function readStreamToEnd(stream) {

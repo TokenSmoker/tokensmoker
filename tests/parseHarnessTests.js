@@ -74,7 +74,13 @@ t("invalid selector returns descriptive error", () => {
   const r = parseHarnessAndPrompt(["banana", "some prompt"]);
   assertEqual(r.harness, null);
   assertContains(r.error, "Unknown harness");
-  assertContains(r.error, "auto, code, design");
+  assertContains(r.error, "auto, code, design, docs");
+});
+
+t("smoke docs <prompt> → harness=docs", () => {
+  const r = parseHarnessAndPrompt(["docs", "rewrite the README"]);
+  assertEqual(r.harness, "docs");
+  assertEqual(r.prompt, "rewrite the README");
 });
 
 t("single-word prompt without recognizable selector pattern stays as auto", () => {
