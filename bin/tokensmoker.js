@@ -3,7 +3,6 @@
 const activate = require("../src/activate");
 const { status } = require("../src/status");
 const compile = require("../src/compile");
-const upgrade = require("../src/upgrade");
 const { HARNESSES, parseHarnessAndPrompt } = require("../src/parseHarness");
 const { parseInputFlags, readPromptFromSource } = require("../src/parseInput");
 const { version: CLI_VERSION } = require("../package.json");
@@ -48,7 +47,6 @@ TokenSmoker CLI v${CLI_VERSION}
 Usage:
   tokensmoker activate
   tokensmoker status
-  tokensmoker upgrade
 
 Compile prompts:
   tokensmoker "fix this function"
@@ -85,8 +83,6 @@ if (command === "activate") {
   dispatchCompile(args.slice(1));
 } else if (command === "status") {
   status();
-} else if (command === "upgrade") {
-  upgrade();
 } else if (command === "--help" || command === "-h") {
   console.log(helpText);
 } else if (command === "--version" || command === "-v" || command === "version") {
