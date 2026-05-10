@@ -1,11 +1,47 @@
 {
   "name": "tokensmoker",
-  "version": "0.7.1",
-  "description": "TokenSmoker commercial CLI",
+  "version": "0.7.2",
+  "description": "Multi-harness prompt compiler — preserves engineering, design, and docs intent for stronger first-pass model output.",
+  "license": "MIT",
+  "author": "Steven Rouse",
+  "homepage": "https://github.com/TokenSmoker/tokensmoker#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TokenSmoker/tokensmoker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TokenSmoker/tokensmoker/issues"
+  },
+  "keywords": [
+    "prompt",
+    "prompt-compiler",
+    "prompt-engineering",
+    "cli",
+    "compile",
+    "harness",
+    "code",
+    "design",
+    "docs",
+    "tokens",
+    "preservation"
+  ],
   "bin": {
     "tokensmoker": "./bin/tokensmoker.js",
     "tsm": "./bin/tokensmoker.js",
     "smoke": "./bin/tokensmoker.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node tests/parseHarnessTests.js && node tests/parseInputTests.js && node tests/credentialsTests.js && node tests/activateTests.js && node tests/renderTests.js",
+    "prepublishOnly": "npm test"
   },
   "dependencies": {
     "prompt-sync": "^4.2.0"
