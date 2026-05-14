@@ -100,36 +100,62 @@ snippets:
 ## Installation
 
 ```bash
-# from npm
 npm install -g tokensmoker
-
-# or directly from GitHub
-npm install -g github:TokenSmoker/tokensmoker
 ```
 
-Three equivalent binaries: `tokensmoker`, `tsm`, and `smoke`.
+Installs three equivalent CLI binaries:
+
+- `smoke` — preferred public command
+- `tsm` — shorthand for code-oriented use
+- `tokensmoker` — full command name
+
+Use whichever fits your muscle memory. All three accept the same
+arguments.
+
+---
+
+## Quick start
+
+```bash
+npm install -g tokensmoker
+smoke activate --email you@example.com
+smoke status
+smoke code "paste or type your prompt here"
+```
+
+That's the full path from install to a compiled prompt. Activation is
+keyless — you give the CLI your email, it provisions credentials over
+TLS, and writes them to `~/.tokensmoker/activation.json` for you. There
+is no API key to copy, paste, or rotate by hand.
 
 ---
 
 ## Activation
 
 ```bash
-tokensmoker activate
+smoke activate --email you@example.com
 ```
 
-Activation asks for your name and email. Credentials are provisioned
-automatically — there is no API key to copy, paste, or rotate by hand.
-The trial is global per user, not per project.
+The CLI looks up your TokenSmoker account by email and writes a fresh
+local activation file. If you already have an account (trial or
+subscription), this is everything you need to do.
 
 ```bash
-tokensmoker status
+smoke status
 ```
 
 Prints the activation state, plan, and trial days remaining.
 
+```bash
+smoke upgrade
+```
+
+After activation, opens Stripe Checkout in your browser to subscribe to
+the Starter plan. The trial is global per user, not per project.
+
 ---
 
-## Quick start
+## Compiling prompts
 
 Explicit harness selection is recommended whenever you know the domain.
 It skips detection and produces deterministic output.
@@ -305,29 +331,68 @@ outcomes are first-class.
 ## Available commands
 
 ```bash
-tokensmoker activate              # provision credentials
-tokensmoker status                # check plan and trial state
+# Activation, status, upgrade
+tokensmoker activate --email you@example.com
+smoke        activate --email you@example.com
+tokensmoker status
+smoke        status
+smoke        upgrade
 
-smoke "..."                       # auto-detect (code or design)
-smoke code "..."                  # force TS-Code
-smoke design --paste              # TS-Design, paste from terminal
-smoke design --file prompt.txt    # TS-Design, read from file
-smoke docs --paste                # TS-Docs, paste from terminal
-smoke docs --file prompt.txt      # TS-Docs, read from file
+# Compile prompts
+smoke "paste or type your prompt here"                # auto-detect
+smoke code   "paste or type your prompt here"         # force TS-Code
+smoke design --paste                                  # TS-Design, paste
+smoke design --file prompt.txt                        # TS-Design, file
+smoke docs   --paste                                  # TS-Docs, paste
+smoke docs   --file prompt.txt                        # TS-Docs, file
 ```
 
-`tsm` and `smoke` are aliases for `tokensmoker` — use whichever fits
-your muscle memory.
+`smoke`, `tsm`, and `tokensmoker` are equivalent binaries — pick one.
 
-### Legacy / compatibility
+---
+
+## Troubleshooting
+
+**Not activated** — `smoke status` or `smoke upgrade` reports that
+TokenSmoker is not activated.
 
 ```bash
-tokensmoker compile "..."
-tokensmoker compile design "..."
+smoke activate --email you@example.com
 ```
 
-Still supported for older scripts. New work should use `smoke <harness>`
-directly.
+**`No TokenSmoker account found for <email>.`** — the email you passed
+does not have a TokenSmoker account yet. Start a trial or subscribe at
+[tokensmoker.com](https://tokensmoker.com), then re-run
+`smoke activate --email <that email>`.
+
+**`Please provide a valid email address.`** — the value passed to
+`--email` was not a valid email. Re-run with a real address, e.g.
+`smoke activate --email you@example.com`.
+
+**Expired or invalid local activation** — the API rejected your stored
+credentials (for example, after a long gap, or if the local file was
+edited). Re-activate:
+
+```bash
+smoke activate --email you@example.com
+```
+
+**Subscribe / upgrade trial** — after activation, run:
+
+```bash
+smoke upgrade
+```
+
+This opens Stripe Checkout in your browser. You do not need to copy or
+paste anything afterwards; the next compile picks up the new plan.
+
+---
+
+## Advanced
+
+`TOKENSMOKER_API_URL` overrides the default API host. This is only
+useful for development and self-hosting; normal users do not need to
+set it.
 
 ---
 
