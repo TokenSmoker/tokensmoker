@@ -40,7 +40,7 @@ function status() {
 
   if (!data) {
     console.log("TokenSmoker not activated.");
-    console.log("Run: tokensmoker activate");
+    console.log("Run: smoke activate --email you@example.com");
     return;
   }
 
@@ -73,8 +73,12 @@ function status() {
 
   if (trial.expired) {
     console.log("\nTrial expired. Please upgrade to continue commercial use.");
+    console.log("To subscribe, run:");
+    console.log("  smoke upgrade");
   } else if (trial.shouldWarn) {
     console.log("\nTrial period nearing expiration.");
+    console.log("To subscribe, run:");
+    console.log("  smoke upgrade");
   }
 }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const activate = require("../src/activate");
+const upgrade = require("../src/upgrade");
 const { status } = require("../src/status");
 const compile = require("../src/compile");
 const { HARNESSES, parseHarnessAndPrompt } = require("../src/parseHarness");
@@ -48,6 +49,10 @@ Activate (keyless — just use your email):
   tokensmoker activate --email you@example.com
   smoke activate --email you@example.com
 
+Upgrade trial to Starter subscription (opens Stripe Checkout):
+  tokensmoker upgrade
+  smoke upgrade
+
 Status:
   tokensmoker status
 
@@ -82,6 +87,8 @@ Explicit:
 
 if (command === "activate") {
   activate(args.slice(1));
+} else if (command === "upgrade") {
+  upgrade(args.slice(1));
 } else if (command === "compile") {
   dispatchCompile(args.slice(1));
 } else if (command === "status") {

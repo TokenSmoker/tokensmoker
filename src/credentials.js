@@ -1,7 +1,7 @@
 const { getActivationData } = require("./status");
 
 const ACTIVATION_GUIDANCE =
-  "TokenSmoker is not activated. Run: tokensmoker activate";
+  "TokenSmoker is not activated. Run: smoke activate --email you@example.com";
 
 function resolveApiKey({ readEnv, readActivation } = {}) {
   const envReader = readEnv || (() => process.env.TOKENSMOKER_API_KEY);

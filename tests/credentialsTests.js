@@ -66,7 +66,7 @@ t("missing env + missing stored key returns activation guidance", () => {
   assertEqual(r.error, ACTIVATION_GUIDANCE);
   assertEqual(
     r.error,
-    "TokenSmoker is not activated. Run: tokensmoker activate"
+    "TokenSmoker is not activated. Run: smoke activate --email you@example.com"
   );
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "tokensmoker",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Multi-harness prompt compiler — preserves engineering, design, and docs intent for stronger first-pass model output.",
   "license": "MIT",
   "author": "Steven Rouse",
@@ -26,9 +26,9 @@
     "preservation"
   ],
   "bin": {
-    "tokensmoker": "./bin/tokensmoker.js",
-    "tsm": "./bin/tokensmoker.js",
-    "smoke": "./bin/tokensmoker.js"
+    "tokensmoker": "bin/tokensmoker.js",
+    "tsm": "bin/tokensmoker.js",
+    "smoke": "bin/tokensmoker.js"
   },
   "files": [
     "bin",
@@ -40,7 +40,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "node tests/parseHarnessTests.js && node tests/parseInputTests.js && node tests/credentialsTests.js && node tests/activateTests.js && node tests/renderTests.js",
+    "test": "node tests/parseHarnessTests.js && node tests/parseInputTests.js && node tests/credentialsTests.js && node tests/activateTests.js && node tests/upgradeTests.js && node tests/renderTests.js",
     "prepublishOnly": "npm test"
   },
   "dependencies": {
