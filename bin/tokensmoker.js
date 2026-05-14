@@ -44,8 +44,11 @@ const command = args[0];
 const helpText = `
 TokenSmoker CLI v${CLI_VERSION}
 
-Usage:
-  tokensmoker activate
+Activate (keyless — just use your email):
+  tokensmoker activate --email you@example.com
+  smoke activate --email you@example.com
+
+Status:
   tokensmoker status
 
 Compile prompts:
@@ -78,7 +81,7 @@ Explicit:
 `;
 
 if (command === "activate") {
-  activate();
+  activate(args.slice(1));
 } else if (command === "compile") {
   dispatchCompile(args.slice(1));
 } else if (command === "status") {
