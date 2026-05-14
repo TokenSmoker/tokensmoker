@@ -16,6 +16,9 @@ const INVALID_ACTIVATION_MESSAGE = [
   "  smoke activate --email you@example.com"
 ].join("\n");
 
+const NO_SUBSCRIPTION_MESSAGE =
+  "No paid subscription to manage. Run `smoke upgrade` to subscribe.";
+
 function defaultOpenBrowser(url) {
   const platform = os.platform();
   let cmd, args;
@@ -39,8 +42,8 @@ function defaultOpenBrowser(url) {
   }
 }
 
-async function upgrade(rawArgs, deps = {}) {
-  // Backward-compatible call shape: support upgrade({...deps}) too.
+async function cancel(rawArgs, deps = {}) {
+  // Backward-compatible call shape: support cancel({...deps}) too.
   if (rawArgs && !Array.isArray(rawArgs) && typeof rawArgs === "object") {
     deps = rawArgs;
     rawArgs = [];
@@ -63,7 +66,7 @@ async function upgrade(rawArgs, deps = {}) {
 
   let res;
   try {
-    res = await fetchFn(`${baseUrl}/billing/checkout`, {
+    res = await fetchFn(`${baseUrl}/billing/portal`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,6 +81,11 @@ async function upgrade(rawArgs, deps = {}) {
 
   if (res.status === 401 || res.status === 403) {
     errLog(INVALID_ACTIVATION_MESSAGE);
+    return process.exit(1);
+  }
+  if (res.status === 409) {
+    // No paid subscription / no stripe_customer_id on record.
+    errLog(NO_SUBSCRIPTION_MESSAGE);
     return process.exit(1);
   }
   if (res.status === 404) {
@@ -97,52 +105,25 @@ async function upgrade(rawArgs, deps = {}) {
     return process.exit(1);
   }
 
-  // Already-paid branch: the API refused to create another Checkout Session
-  // because this user already has an active subscription. Tell the user;
-  // do NOT open the browser.
-  if (payload && payload.alreadyUpgraded === true) {
-    log("TokenSmoker is already upgraded.");
-    if (payload.planName) {
-      log(`Plan: ${payload.planName}`);
-    } else if (payload.plan) {
-      log(`Plan: ${payload.plan}`);
-    }
-    if (payload.subscriptionStatus) {
-      log(`Status: ${payload.subscriptionStatus}`);
-    }
-    if (typeof payload.manageUrl === "string" && payload.manageUrl) {
-      log("");
-      log("Manage billing:");
-      log(payload.manageUrl);
-    } else {
-      log("");
-      log("To manage or cancel your subscription, run:");
-      log("  smoke cancel");
-    }
-    return;
-  }
-
   const url =
     payload && typeof payload.url === "string" && payload.url ? payload.url : null;
   if (!url) {
-    errLog("Billing service did not return a checkout URL.");
+    errLog("Billing service did not return a portal URL.");
     return process.exit(1);
   }
 
   const opened = openBrowser(url);
   if (opened) {
-    log("Opening Stripe Checkout...");
+    log("Opening billing management page...");
+  } else {
+    log("Manage or cancel your subscription:");
   }
   log("If your browser did not open, paste this URL:");
   log(url);
-  log("");
-  log("After completing checkout, run:");
-  log("  smoke status");
-  log("");
-  log("Your local activation will refresh automatically.");
 }
 
-module.exports = upgrade;
+module.exports = cancel;
 module.exports.DEFAULT_API_URL = DEFAULT_API_URL;
 module.exports.NOT_ACTIVATED_MESSAGE = NOT_ACTIVATED_MESSAGE;
 module.exports.INVALID_ACTIVATION_MESSAGE = INVALID_ACTIVATION_MESSAGE;
+module.exports.NO_SUBSCRIPTION_MESSAGE = NO_SUBSCRIPTION_MESSAGE;

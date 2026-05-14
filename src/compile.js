@@ -1,5 +1,6 @@
 const { resolveApiKey } = require("./credentials");
 const { renderCompileSummary } = require("./render");
+const { refreshAccountState } = require("./accountState");
 
 async function compile(userPrompt, opts = {}) {
   if (!userPrompt || !userPrompt.trim()) {
@@ -18,6 +19,22 @@ async function compile(userPrompt, opts = {}) {
 
   const baseUrl =
     process.env.TOKENSMOKER_API_URL || "https://tokensmoker-api.onrender.com";
+
+  // Refresh local account state from the server before each compile so that
+  // post-payment status (and any plan transitions) take effect without the
+  // user having to re-run `smoke activate`. Network/cache failures fall
+  // through to the existing /compile auth check — we never block compile on
+  // refresh alone.
+  const refresh = await refreshAccountState({
+    apiKey,
+    baseUrl,
+    fetchFn: globalThis.fetch
+  });
+  if (!refresh.ok && refresh.status === "unauthorized") {
+    console.error("TokenSmoker activation needs to be refreshed.");
+    console.error("Run: smoke activate --email you@example.com");
+    process.exit(1);
+  }
 
   let res;
   try {

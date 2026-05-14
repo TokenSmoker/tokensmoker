@@ -328,6 +328,90 @@ function notActivated() {
     }
   });
 
+  await t("alreadyUpgraded response: prints status, does NOT open browser", async () => {
+    const log = [];
+    const err = [];
+    let openCalled = false;
+
+    const code = await runUpgrade([], {
+      resolveApiKey: activated(),
+      fetch: makeFetch({
+        status: 200,
+        body: {
+          alreadyUpgraded: true,
+          plan: "starter",
+          planName: "Starter Monthly",
+          subscriptionStatus: "active",
+          manageUrl: "https://billing.stripe.com/p/session/abc"
+        }
+      }),
+      openBrowser: () => { openCalled = true; return true; },
+      log: (m) => log.push(String(m)),
+      errLog: (m) => err.push(String(m))
+    });
+
+    assertEqual(code, null, "exit code must be 0 (no process.exit)");
+    assertEqual(openCalled, false,
+      "must NOT open browser when already upgraded — guards against double-charge");
+    const out = log.join("\n");
+    assert(out.includes("TokenSmoker is already upgraded."));
+    assert(out.includes("Plan: Starter Monthly"));
+    assert(out.includes("Status: active"));
+    assert(out.includes("https://billing.stripe.com/p/session/abc"),
+      "must show manageUrl when API provides one");
+    // Crucially: never tells the user to rerun `smoke activate`.
+    assertNotContains(out, "smoke activate");
+  });
+
+  await t("alreadyUpgraded without manageUrl falls back to 'smoke cancel' hint", async () => {
+    const log = [];
+    let openCalled = false;
+    const code = await runUpgrade([], {
+      resolveApiKey: activated(),
+      fetch: makeFetch({
+        status: 200,
+        body: {
+          alreadyUpgraded: true,
+          plan: "starter",
+          planName: null,
+          subscriptionStatus: "active",
+          manageUrl: null
+        }
+      }),
+      openBrowser: () => { openCalled = true; return true; },
+      log: (m) => log.push(String(m)),
+      errLog: () => {}
+    });
+    assertEqual(code, null);
+    assertEqual(openCalled, false);
+    const out = log.join("\n");
+    assert(out.includes("TokenSmoker is already upgraded."));
+    assert(out.includes("Plan: starter"),
+      "falls back to plan when planName missing");
+    assert(out.includes("smoke cancel"),
+      "must hint at smoke cancel when manageUrl missing");
+  });
+
+  await t("successful checkout prints 'smoke status' guidance, not 'smoke activate'", async () => {
+    const log = [];
+    await runUpgrade([], {
+      resolveApiKey: activated(),
+      fetch: makeFetch({ status: 200, body: { url: CHECKOUT_URL } }),
+      openBrowser: () => true,
+      log: (m) => log.push(String(m)),
+      errLog: () => {}
+    });
+    const out = log.join("\n");
+    assert(out.includes("After completing checkout, run:"),
+      "must tell user the next step after checkout");
+    assert(out.includes("smoke status"),
+      "next step is `smoke status`, not `smoke activate`");
+    assert(out.includes("refresh automatically"),
+      "must reassure user the local activation refreshes automatically");
+    assertNotContains(out, "smoke activate",
+      "must NOT tell user to rerun activate after payment");
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) {
     console.log("\nFailures:");

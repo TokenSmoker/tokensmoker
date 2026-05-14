@@ -40,7 +40,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "node tests/parseHarnessTests.js && node tests/parseInputTests.js && node tests/credentialsTests.js && node tests/activateTests.js && node tests/upgradeTests.js && node tests/renderTests.js",
+    "test": "node tests/parseHarnessTests.js && node tests/parseInputTests.js && node tests/credentialsTests.js && node tests/activateTests.js && node tests/upgradeTests.js && node tests/cancelTests.js && node tests/accountStateTests.js && node tests/renderTests.js",
     "prepublishOnly": "npm test"
   },
   "dependencies": {

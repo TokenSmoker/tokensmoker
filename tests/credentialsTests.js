@@ -135,46 +135,65 @@ t("activation.json round-trip exposes apiKey but not in console output", () => {
   fs.rmSync(tmpHome, { recursive: true, force: true });
 });
 
-t("status output does not print apiKey", () => {
-  // Snapshot stdout, run status against a temp activation, ensure key absent.
-  const { status } = require(path.join(__dirname, "..", "src", "status"));
-  const realHome = os.homedir();
-  process.env.HOME = tmpHome;
-
-  fs.mkdirSync(path.join(tmpHome, ".tokensmoker"), { recursive: true });
-  const filePath = path.join(tmpHome, ".tokensmoker", "activation.json");
-  const data = {
-    name: "Test User",
-    email: "test@example.com",
-    apiKey: "do-not-print-this-key",
-    status: "trial",
-    activatedAt: new Date().toISOString()
-  };
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-
-  const captured = [];
-  const origLog = console.log;
-  console.log = (...args) => captured.push(args.join(" "));
-
-  let output = "";
+// `status()` is async — wrap it in a small async test runner so we
+// actually await its output before assertions.
+async function tAsync(name, fn) {
   try {
-    status();
-    output = captured.join("\n");
-  } finally {
-    console.log = origLog;
-    process.env.HOME = realHome;
-    fs.rmSync(tmpHome, { recursive: true, force: true });
+    await fn();
+    passed++;
+    console.log(`  ✓ ${name}`);
+  } catch (err) {
+    failed++;
+    failures.push({ name, message: err.message });
+    console.log(`  ✗ ${name}`);
+    console.log(`      ${err.message}`);
   }
-
-  assertNotContains(output, "do-not-print-this-key");
-  assertNotContains(output, "apiKey");
-});
-
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed > 0) {
-  console.log("\nFailures:");
-  for (const f of failures) {
-    console.log(`  - ${f.name}: ${f.message}`);
-  }
-  process.exit(1);
 }
+
+async function statusOutputTest() {
+  await tAsync("status output does not print apiKey", async () => {
+    const { status } = require(path.join(__dirname, "..", "src", "status"));
+
+    fs.mkdirSync(path.join(tmpHome, ".tokensmoker"), { recursive: true });
+    const filePath = path.join(tmpHome, ".tokensmoker", "activation.json");
+    const data = {
+      name: "Test User",
+      email: "test@example.com",
+      apiKey: "do-not-print-this-key",
+      status: "trial",
+      activatedAt: new Date().toISOString()
+    };
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+    const captured = [];
+    // Treat the server as unreachable so the test never hits the network
+    // and falls back to the cached file — we only care that the apiKey
+    // never appears in any output line.
+    const fetchStub = async () => { throw new Error("unreachable"); };
+    try {
+      await status({
+        homeDir: tmpHome,
+        baseUrl: "http://127.0.0.1:0",
+        fetch: fetchStub,
+        log: (...args) => captured.push(args.join(" "))
+      });
+      const output = captured.join("\n");
+      assertNotContains(output, "do-not-print-this-key");
+      assertNotContains(output, "apiKey");
+    } finally {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    }
+  });
+}
+
+(async () => {
+  await statusOutputTest();
+  console.log(`\n${passed} passed, ${failed} failed`);
+  if (failed > 0) {
+    console.log("\nFailures:");
+    for (const f of failures) {
+      console.log(`  - ${f.name}: ${f.message}`);
+    }
+    process.exit(1);
+  }
+})();

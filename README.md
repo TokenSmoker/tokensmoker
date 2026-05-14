@@ -151,7 +151,17 @@ smoke upgrade
 ```
 
 After activation, opens Stripe Checkout in your browser to subscribe to
-the Starter plan. The trial is global per user, not per project.
+the Starter plan. The trial is global per user, not per project. After
+payment, run `smoke status` — your local activation refreshes
+automatically; you do not need to rerun `smoke activate`.
+
+```bash
+smoke cancel
+```
+
+Opens the Stripe Billing Portal in your browser so you can manage or
+cancel your subscription. The CLI never cancels directly — cancellation
+always happens on Stripe's hosted page.
 
 ---
 
@@ -331,12 +341,13 @@ outcomes are first-class.
 ## Available commands
 
 ```bash
-# Activation, status, upgrade
+# Activation, status, upgrade, cancel
 tokensmoker activate --email you@example.com
 smoke        activate --email you@example.com
 tokensmoker status
 smoke        status
 smoke        upgrade
+smoke        cancel              # manage or cancel your subscription
 
 # Compile prompts
 smoke "paste or type your prompt here"                # auto-detect
@@ -384,7 +395,18 @@ smoke upgrade
 ```
 
 This opens Stripe Checkout in your browser. You do not need to copy or
-paste anything afterwards; the next compile picks up the new plan.
+paste anything afterwards; the next `smoke status` (or any compile)
+refreshes your local activation from the server automatically. You
+should not need to rerun `smoke activate` after payment.
+
+**Manage or cancel your subscription** — open the Stripe Billing Portal:
+
+```bash
+smoke cancel
+```
+
+The CLI never cancels directly; cancellation is always handled on
+Stripe's hosted billing page.
 
 ---
 

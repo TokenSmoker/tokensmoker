@@ -2,6 +2,7 @@
 
 const activate = require("../src/activate");
 const upgrade = require("../src/upgrade");
+const cancel = require("../src/cancel");
 const { status } = require("../src/status");
 const compile = require("../src/compile");
 const { HARNESSES, parseHarnessAndPrompt } = require("../src/parseHarness");
@@ -53,6 +54,10 @@ Upgrade trial to Starter subscription (opens Stripe Checkout):
   tokensmoker upgrade
   smoke upgrade
 
+Manage or cancel subscription (opens Stripe Billing Portal):
+  tokensmoker cancel
+  smoke cancel
+
 Status:
   tokensmoker status
 
@@ -89,6 +94,8 @@ if (command === "activate") {
   activate(args.slice(1));
 } else if (command === "upgrade") {
   upgrade(args.slice(1));
+} else if (command === "cancel") {
+  cancel(args.slice(1));
 } else if (command === "compile") {
   dispatchCompile(args.slice(1));
 } else if (command === "status") {
