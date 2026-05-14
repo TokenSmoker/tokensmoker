@@ -155,13 +155,29 @@ the Starter plan. The trial is global per user, not per project. After
 payment, run `smoke status` — your local activation refreshes
 automatically; you do not need to rerun `smoke activate`.
 
+`smoke upgrade` is idempotent. If you are already on a paid plan, it
+will **not** create another Checkout session and will **not** charge you
+again. It prints your current plan and status, and points you at
+`smoke cancel` for any billing changes:
+
+```text
+TokenSmoker is already upgraded.
+Plan: Starter Monthly
+Status: active
+
+To manage or cancel your subscription, run:
+  smoke cancel
+```
+
 ```bash
 smoke cancel
 ```
 
-Opens the Stripe Billing Portal in your browser so you can manage or
-cancel your subscription. The CLI never cancels directly — cancellation
-always happens on Stripe's hosted page.
+Opens the billing management page (Stripe Billing Portal) in your
+browser so you can update payment details, switch plans, or cancel.
+`smoke cancel` does **not** cancel directly from the CLI — every
+billing change happens on Stripe's hosted page, where you can confirm
+or back out.
 
 ---
 
@@ -346,8 +362,8 @@ tokensmoker activate --email you@example.com
 smoke        activate --email you@example.com
 tokensmoker status
 smoke        status
-smoke        upgrade
-smoke        cancel              # manage or cancel your subscription
+smoke        upgrade              # upgrade from trial to a paid plan
+smoke        cancel               # open billing management to manage or cancel your subscription
 
 # Compile prompts
 smoke "paste or type your prompt here"                # auto-detect
@@ -399,14 +415,21 @@ paste anything afterwards; the next `smoke status` (or any compile)
 refreshes your local activation from the server automatically. You
 should not need to rerun `smoke activate` after payment.
 
-**Manage or cancel your subscription** — open the Stripe Billing Portal:
+If you are already on a paid plan, `smoke upgrade` is a no-op — it
+will not open Checkout, will not create another session, and will not
+charge you again. It prints your current plan and tells you to run
+`smoke cancel` for any billing changes.
+
+**Manage or cancel your subscription** — open the billing management
+page:
 
 ```bash
 smoke cancel
 ```
 
-The CLI never cancels directly; cancellation is always handled on
-Stripe's hosted billing page.
+`smoke cancel` does not cancel directly from the CLI; it opens the
+Stripe Billing Portal where you can update payment details, switch
+plans, or cancel.
 
 ---
 
