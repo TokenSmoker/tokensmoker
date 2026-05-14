@@ -328,11 +328,15 @@ function notActivated() {
     }
   });
 
-  await t("alreadyUpgraded response: prints status, does NOT open browser", async () => {
+  await t("alreadyUpgraded response: prints status, does NOT open browser, routes user to smoke cancel", async () => {
     const log = [];
     const err = [];
     let openCalled = false;
 
+    // Even when the API returns a manageUrl, `smoke upgrade` must NOT
+    // print it — Stripe Billing Portal URLs belong to `smoke cancel`.
+    // Including the URL here would also lengthen the output and confuse
+    // users about which command to run for billing changes.
     const code = await runUpgrade([], {
       resolveApiKey: activated(),
       fetch: makeFetch({
@@ -355,15 +359,23 @@ function notActivated() {
       "must NOT open browser when already upgraded — guards against double-charge");
     const out = log.join("\n");
     assert(out.includes("TokenSmoker is already upgraded."));
+    // planName wins when present; falls back to plan otherwise.
     assert(out.includes("Plan: Starter Monthly"));
     assert(out.includes("Status: active"));
-    assert(out.includes("https://billing.stripe.com/p/session/abc"),
-      "must show manageUrl when API provides one");
+    assert(out.includes("To manage or cancel your subscription, run:"),
+      "must route the user to the cancel command for billing changes");
+    assert(out.includes("smoke cancel"),
+      "must include the literal `smoke cancel` invocation");
+    // Critical: the Billing Portal URL must NEVER appear in upgrade output.
+    assertNotContains(out, "https://billing.stripe.com",
+      "must NOT print the Stripe Billing Portal URL from smoke upgrade");
+    assertNotContains(out, "/p/session/",
+      "must NOT print any portal session URL from smoke upgrade");
     // Crucially: never tells the user to rerun `smoke activate`.
     assertNotContains(out, "smoke activate");
   });
 
-  await t("alreadyUpgraded without manageUrl falls back to 'smoke cancel' hint", async () => {
+  await t("alreadyUpgraded with planName=null falls back to plan field", async () => {
     const log = [];
     let openCalled = false;
     const code = await runUpgrade([], {
@@ -388,8 +400,11 @@ function notActivated() {
     assert(out.includes("TokenSmoker is already upgraded."));
     assert(out.includes("Plan: starter"),
       "falls back to plan when planName missing");
-    assert(out.includes("smoke cancel"),
-      "must hint at smoke cancel when manageUrl missing");
+    assert(out.includes("Status: active"));
+    assert(out.includes("To manage or cancel your subscription, run:"));
+    assert(out.includes("smoke cancel"));
+    // No URL was returned, but also assert no Stripe URL ever printed.
+    assertNotContains(out, "https://billing.stripe.com");
   });
 
   await t("successful checkout prints 'smoke status' guidance, not 'smoke activate'", async () => {

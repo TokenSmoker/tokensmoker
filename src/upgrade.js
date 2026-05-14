@@ -99,7 +99,10 @@ async function upgrade(rawArgs, deps = {}) {
 
   // Already-paid branch: the API refused to create another Checkout Session
   // because this user already has an active subscription. Tell the user;
-  // do NOT open the browser.
+  // do NOT open the browser. Always route them to `smoke cancel` for
+  // billing management — we never print a Stripe Billing Portal URL from
+  // this command, even if the API returned manageUrl, because that URL
+  // belongs to the cancel command's surface.
   if (payload && payload.alreadyUpgraded === true) {
     log("TokenSmoker is already upgraded.");
     if (payload.planName) {
@@ -110,15 +113,9 @@ async function upgrade(rawArgs, deps = {}) {
     if (payload.subscriptionStatus) {
       log(`Status: ${payload.subscriptionStatus}`);
     }
-    if (typeof payload.manageUrl === "string" && payload.manageUrl) {
-      log("");
-      log("Manage billing:");
-      log(payload.manageUrl);
-    } else {
-      log("");
-      log("To manage or cancel your subscription, run:");
-      log("  smoke cancel");
-    }
+    log("");
+    log("To manage or cancel your subscription, run:");
+    log("  smoke cancel");
     return;
   }
 
