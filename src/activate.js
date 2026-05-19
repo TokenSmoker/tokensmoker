@@ -88,12 +88,23 @@ async function activate(rawArgs, deps = {}) {
     return process.exit(1);
   }
 
+  // Defensive: server is create-or-activate so 404 should not occur, but
+  // keep the message in case an older API instance is reached.
   if (res.status === 404) {
     errLog(`No TokenSmoker account found for ${email}.`);
     return process.exit(1);
   }
   if (res.status === 403) {
-    errLog("No active trial or subscription found for this email.");
+    // Surface the server-provided upgrade guidance verbatim; fall back to
+    // a sensible default if the body is missing or malformed.
+    let msg = "Free trial expired. Run: smoke upgrade";
+    try {
+      const body = await res.json();
+      if (body && typeof body.error === "string" && body.error.trim()) {
+        msg = body.error.trim();
+      }
+    } catch { /* keep default */ }
+    errLog(msg);
     return process.exit(1);
   }
 

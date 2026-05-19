@@ -120,13 +120,20 @@ arguments.
 npm install -g tokensmoker
 smoke activate --email you@example.com
 smoke status
-smoke code "paste or type your prompt here"
+smoke "paste or type your prompt here"
 ```
 
 That's the full path from install to a compiled prompt. Activation is
 keyless — you give the CLI your email, it provisions credentials over
 TLS, and writes them to `~/.tokensmoker/activation.json` for you. There
 is no API key to copy, paste, or rotate by hand.
+
+`smoke activate --email <email>` is **create-or-activate**: if no
+TokenSmoker account exists for that email, the server creates one and
+starts a free trial automatically. If an account already exists with
+an active trial or subscription, the same command refreshes your local
+credentials. Either way, `smoke status` immediately after activation
+shows an active free trial (or your paid plan, if you have one).
 
 ---
 
@@ -136,9 +143,18 @@ is no API key to copy, paste, or rotate by hand.
 smoke activate --email you@example.com
 ```
 
-The CLI looks up your TokenSmoker account by email and writes a fresh
-local activation file. If you already have an account (trial or
-subscription), this is everything you need to do.
+The first time you run this, the server creates your TokenSmoker
+account, starts a 14-day free trial, and returns the credentials the
+CLI writes to `~/.tokensmoker/activation.json`. Subsequent runs are
+idempotent — they refresh credentials without creating duplicate
+accounts or keys.
+
+If your free trial has expired and you have no paid subscription, the
+CLI prints upgrade guidance:
+
+```text
+Free trial expired. Run: smoke upgrade
+```
 
 ```bash
 smoke status
@@ -387,10 +403,11 @@ TokenSmoker is not activated.
 smoke activate --email you@example.com
 ```
 
-**`No TokenSmoker account found for <email>.`** — the email you passed
-does not have a TokenSmoker account yet. Start a trial or subscribe at
-[tokensmoker.com](https://tokensmoker.com), then re-run
-`smoke activate --email <that email>`.
+**`No TokenSmoker account found for <email>.`** — only seen against an
+older API instance. The current API creates a free-trial account on the
+fly when you run `smoke activate --email <email>`. Re-run that command;
+if the error persists, your CLI may be hitting a stale endpoint via
+`TOKENSMOKER_API_URL` — unset it and try again.
 
 **`Please provide a valid email address.`** — the value passed to
 `--email` was not a valid email. Re-run with a real address, e.g.

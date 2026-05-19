@@ -298,6 +298,132 @@ function makeFetch({ status = 200, body, throws } = {}) {
     fs.rmSync(home, { recursive: true, force: true });
   });
 
+  await t("403 with upgradeRequired surfaces 'smoke upgrade' instruction", async () => {
+    const home = tmpHome();
+    const err = [];
+    const code = await runActivate(["--email", "expired@example.com"], {
+      fetch: makeFetch({
+        status: 403,
+        body: {
+          error: "Free trial expired. Run: smoke upgrade",
+          upgradeRequired: true
+        }
+      }),
+      baseUrl: "https://api.test",
+      homeDir: home,
+      log: () => {},
+      errLog: (m) => err.push(String(m))
+    });
+    assertEqual(code, 1);
+    const out = err.join("\n");
+    assert(out.includes("smoke upgrade"),
+      "must instruct user to run `smoke upgrade`");
+    const filePath = path.join(home, ".tokensmoker", "activation.json");
+    assert(!fs.existsSync(filePath), "no file written on 403");
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
+  await t("brand-new email: server returns trial creds, CLI writes activation.json with status='trial'", async () => {
+    const home = tmpHome();
+    const log = [];
+    const err = [];
+    const code = await runActivate(["--email", "new-user@example.com"], {
+      fetch: makeFetch({
+        status: 200,
+        body: {
+          apiKey: "trial-key-xyz",
+          email: "new-user@example.com",
+          plan: "trial",
+          subscriptionStatus: null,
+          trialEndsAt: "2026-06-02T00:00:00.000Z"
+        }
+      }),
+      baseUrl: "https://api.test",
+      homeDir: home,
+      log: (m) => log.push(String(m)),
+      errLog: (m) => err.push(String(m))
+    });
+    assertEqual(code, null);
+    const filePath = path.join(home, ".tokensmoker", "activation.json");
+    assert(fs.existsSync(filePath), "activation.json written");
+    const stored = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    assertEqual(stored.status, "trial",
+      "brand-new activation records status='trial'");
+    assertEqual(stored.email, "new-user@example.com");
+    assertEqual(stored.apiKey, "trial-key-xyz");
+    assertEqual(stored.subscriptionStatus, null);
+    assertEqual(stored.trialEndsAt, "2026-06-02T00:00:00.000Z");
+    // Confirmation message uses the activated email.
+    assert(log.join("\n").includes("TokenSmoker activated for new-user@example.com."));
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
+  await t("activate then status: status reports active free trial", async () => {
+    const home = tmpHome();
+    const log = [];
+    const err = [];
+
+    // Step 1: activate. Server returns trial creds (no subscription).
+    let activateCalled = false;
+    await runActivate(["--email", "trial-user@example.com"], {
+      fetch: async (url) => {
+        activateCalled = true;
+        assert(url.endsWith("/activate/lookup"));
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            apiKey: "trial-key-abc",
+            email: "trial-user@example.com",
+            plan: "trial",
+            subscriptionStatus: null,
+            trialEndsAt: "2026-06-02T00:00:00.000Z"
+          })
+        };
+      },
+      baseUrl: "https://api.test",
+      homeDir: home,
+      log: () => {},
+      errLog: () => {}
+    });
+    assert(activateCalled, "activate fetched");
+
+    // Step 2: status. /billing/me confirms trial.
+    const { status } = require(path.join(__dirname, "..", "src", "status"));
+    await status({
+      baseUrl: "https://api.test",
+      homeDir: home,
+      log: (m) => log.push(String(m)),
+      fetch: async (url, opts) => {
+        assert(url.endsWith("/billing/me"));
+        assertEqual(opts.headers.Authorization, "Bearer trial-key-abc");
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            email: "trial-user@example.com",
+            plan: "trial",
+            planName: null,
+            subscriptionStatus: null,
+            currentPeriodEnd: null,
+            trialEndsAt: "2026-06-02T00:00:00.000Z",
+            hasCustomer: false,
+            paid: false,
+            status: "trial"
+          })
+        };
+      }
+    });
+    const out = log.join("\n");
+    assert(out.includes("TokenSmoker Status"));
+    assert(out.includes("Email: trial-user@example.com"));
+    assert(out.includes("Status: trial"),
+      "status output must show active free trial");
+    assert(/Trial days remaining: \d+/.test(out),
+      "status output must show remaining trial days");
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
   await t("network failure → 'Unable to contact TokenSmoker activation service.' and exit 1", async () => {
     const home = tmpHome();
     const err = [];
