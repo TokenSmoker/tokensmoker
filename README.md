@@ -118,7 +118,7 @@ arguments.
 
 ```bash
 npm install -g tokensmoker
-smoke activate --email you@example.com
+smoke activate 
 smoke status
 smoke "paste or type your prompt here"
 ```
