@@ -1,6 +1,6 @@
 {
   "name": "tokensmoker",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Multi-harness prompt compiler — preserves engineering, design, and docs intent for stronger first-pass model output.",
   "license": "MIT",
   "author": "Steven Rouse",
