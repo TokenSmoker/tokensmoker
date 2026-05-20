@@ -374,8 +374,8 @@ outcomes are first-class.
 
 ```bash
 # Activation, status, upgrade, cancel
-tokensmoker activate --email you@example.com
-smoke        activate --email you@example.com
+tokensmoker activate 
+smoke        activate 
 tokensmoker status
 smoke        status
 smoke        upgrade              # upgrade from trial to a paid plan
@@ -418,7 +418,7 @@ credentials (for example, after a long gap, or if the local file was
 edited). Re-activate:
 
 ```bash
-smoke activate --email you@example.com
+smoke activate 
 ```
 
 **Subscribe / upgrade trial** — after activation, run:
